@@ -13,6 +13,8 @@ import java.util.concurrent.Future
 
 class NetworkBase {
     private val BASE_URL: String = "http://staging-gateway.mondiamedia.com/"
+
+    // TODO: before get musics should check time if token still valid or not
     fun getMusics(query: String, token: String): Future<String> {
         val reqParam = URLEncoder.encode("query", "UTF-8") + "=" + URLEncoder.encode(query, "UTF-8")
         return Executors.newSingleThreadExecutor().submit(Callable<String> {
