@@ -2,6 +2,7 @@ package com.hassanhamdy.musicshowcase
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStream
@@ -17,21 +18,22 @@ import java.util.concurrent.Future
 class NetworkBase {
     private val BASE_URL: String = "http://staging-gateway.mondiamedia.com/"
 
-    // TODO: before get musics should check time if token still valid or not
-    fun getMusics(query: String, token: String): Future<String> {
+    fun getMusics(query: String, token: String): Future<Pair<Int, String>> {
+        Log.d("HASSAN", "GET MUSIC CALLED")
         val reqParam = URLEncoder.encode("query", "UTF-8") + "=" + URLEncoder.encode(query, "UTF-8")
-        return Executors.newSingleThreadExecutor().submit(Callable<String> {
+        return Executors.newSingleThreadExecutor().submit(Callable<Pair<Int, String>> {
             sendRequest(
                 endPoint = "v2/api/sayt/flat",
                 reqParam = reqParam,
                 requestMethodType = NetworkRequestTypes.GET,
-                accessToken = "C202558d6-4954-4818-97b1-407d4815e649"
+                accessToken = token
             )
         })
     }
 
-    fun getAccessToken(): Future<String> {
-        return Executors.newSingleThreadExecutor().submit(Callable<String> {
+    fun getAccessToken(): Future<Pair<Int, String>> {
+        Log.d("HASSAN", "ACCESS TOKEN CALLED")
+        return Executors.newSingleThreadExecutor().submit(Callable<Pair<Int, String>> {
             sendRequest(
                 endPoint = "v0/api/gateway/token/client",
                 requestMethodType = NetworkRequestTypes.POST
@@ -42,11 +44,11 @@ class NetworkBase {
 
     fun getNetworkImage(url: String): Future<Bitmap> {
         return Executors.newSingleThreadExecutor().submit(Callable<Bitmap> {
-            getBitmapFromURL(url)
+            getBitmapFromURL("http:$url")
         })
     }
 
-    fun getBitmapFromURL(imageUrl: String?): Bitmap? {
+    private fun getBitmapFromURL(imageUrl: String?): Bitmap? {
         return try {
             val url = URL(imageUrl)
             val connection = url.openConnection() as HttpURLConnection
@@ -66,7 +68,7 @@ class NetworkBase {
         reqParam: String = "",
         requestMethodType: NetworkRequestTypes,
         accessToken: String = ""
-    ): String {
+    ): Pair<Int, String> {
 
         var requestUrl = BASE_URL + endPoint
         if (reqParam != "")
@@ -80,7 +82,7 @@ class NetworkBase {
                 requestMethod = requestMethodType.requestType
                 addRequestProperty("X-MM-GATEWAY-KEY", "Ge6c853cf-5593-a196-efdb-e3fd7b881eca")
                 addRequestProperty("Content-Type", "application/x-www-form-urlencoded")
-                if(accessToken != "") {
+                if (accessToken != "") {
                     val authorization = "Bearer $accessToken"
                     addRequestProperty("Authorization", authorization)
                 }
@@ -98,11 +100,11 @@ class NetworkBase {
                     }
                     it.close()
                     println("Response : $response")
-                    return response.toString()
+                    return Pair(responseCode, response.toString())
                 }
             }
         } catch (e: IOException) {
-            return e.message ?: "ERROR"
+            return Pair(404, e.message ?: "ERROR")
         }
     }
 }
