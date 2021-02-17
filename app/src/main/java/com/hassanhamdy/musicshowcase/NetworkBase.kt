@@ -1,7 +1,10 @@
 package com.hassanhamdy.musicshowcase
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStream
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -34,6 +37,27 @@ class NetworkBase {
                 requestMethodType = NetworkRequestTypes.POST
             )
         })
+    }
+
+
+    fun getNetworkImage(url: String): Future<Bitmap> {
+        return Executors.newSingleThreadExecutor().submit(Callable<Bitmap> {
+            getBitmapFromURL(url)
+        })
+    }
+
+    fun getBitmapFromURL(imageUrl: String?): Bitmap? {
+        return try {
+            val url = URL(imageUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.doInput = true
+            connection.connect()
+            val input: InputStream = connection.inputStream
+            BitmapFactory.decodeStream(input)
+        } catch (e: IOException) {
+            // Log exception
+            null
+        }
     }
 
 
