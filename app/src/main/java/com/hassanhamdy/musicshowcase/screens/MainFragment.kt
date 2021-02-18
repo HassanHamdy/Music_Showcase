@@ -69,7 +69,8 @@ class MainFragment : Fragment() {
         viewModel.onMusicItemClick(music)
         val myfragment = DetailFragment()
         val fragmentTransaction = fragmentManager!!.beginTransaction()
-        fragmentTransaction.replace(R.id.main_fragment, myfragment)
+        fragmentTransaction.replace(R.id.main_fragment, myfragment, "detail")
+        fragmentTransaction.addToBackStack(null)
         fragmentTransaction.commit()
     }
 

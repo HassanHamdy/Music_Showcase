@@ -3,7 +3,6 @@ package com.hassanhamdy.musicshowcase.viewmodel
 import Cover
 import MainArtist
 import MusicModel
-import android.graphics.Bitmap
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,9 +11,7 @@ import com.hassanhamdy.musicshowcase.util.SharedPref
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.*
-import java.util.concurrent.Callable
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
 import kotlin.collections.ArrayList
 
 class MusicViewModel : ViewModel() {
@@ -40,7 +37,7 @@ class MusicViewModel : ViewModel() {
         if (accessToken != "") {
             val musicListResponse = getMusicProcesses(accessToken = accessToken, keyword = keyword)
             if (musicListResponse.first != 404) {
-                _musics.value = parseMusicsInBackground(musicListResponse.second).get()
+                parseMusicsInBackground(musicListResponse.second, ::onParseResponseJsonEnd)
             } else {
                 _error.value = musicListResponse.second
             }
@@ -59,12 +56,12 @@ class MusicViewModel : ViewModel() {
         val millis = SharedPref.instance.getTokenValidTime()
         val expireCalender = getCalenderFromMilliSecond(millis.toLong())
         val currentCalender = Calendar.getInstance()
-        if (currentCalender.compareTo(expireCalender) <= 0)
-            return NetworkBase().getMusics(token = accessToken, query = keyword).get()
+        return if (currentCalender <= expireCalender)
+            NetworkBase().getMusics(token = accessToken, query = keyword).get()
         else {
             SharedPref.instance.putAccessToken("")
             getMusicsApi(keyword)
-            return Pair(404, "token expired get it again")
+            Pair(404, "token expired get it again")
         }
     }
 
@@ -116,10 +113,16 @@ class MusicViewModel : ViewModel() {
         return musics
     }
 
-    fun parseMusicsInBackground(json: String): Future<ArrayList<MusicModel>> {
-        return Executors.newSingleThreadExecutor().submit(Callable<ArrayList<MusicModel>> {
-            parseMusicsJson(json)
-        })
+    private fun parseMusicsInBackground(
+        json: String,
+        listener: (ArrayList<MusicModel>) -> Unit
+    ) {
+        Executors.newSingleThreadExecutor().execute {
+            listener(parseMusicsJson(json))
+        }
     }
 
+    private fun onParseResponseJsonEnd(musics: ArrayList<MusicModel>) {
+        _musics.postValue(musics)
+    }
 }

@@ -2,7 +2,6 @@ package com.hassanhamdy.musicshowcase
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.hassanhamdy.musicshowcase.screens.DetailFragment
 import com.hassanhamdy.musicshowcase.screens.MainFragment
 import com.hassanhamdy.musicshowcase.util.SharedPref
 

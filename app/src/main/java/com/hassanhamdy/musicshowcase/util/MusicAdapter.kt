@@ -4,7 +4,9 @@ import MusicModel
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.hassanhamdy.musicshowcase.R
 import com.hassanhamdy.musicshowcase.databinding.MusicItemListBinding
 
 class MusicAdapter(
@@ -45,7 +47,15 @@ class MusicAdapter(
 
 
         fun bind(musicItem: MusicModel, onItemClicked: (MusicModel) -> Unit) {
-            binding.ivMusicImage.setImageBitmap(musicItem.bitmapImage)
+            if (musicItem.bitmapImage != null)
+                binding.ivMusicImage.setImageBitmap(musicItem.bitmapImage)
+            else
+                binding.ivMusicImage.setImageDrawable(
+                    ContextCompat.getDrawable(
+                        context,
+                        R.drawable.ic_broken_image
+                    )
+                )
             binding.tvMusicName.text = musicItem.title
             binding.tvArtistName.text = musicItem.mainArtist.name
             binding.tvMusicType.text = musicItem.type
